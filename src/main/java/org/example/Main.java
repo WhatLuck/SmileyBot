@@ -1,6 +1,8 @@
 package org.example;
+import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
 
@@ -9,19 +11,25 @@ import javax.security.auth.login.LoginException;
 public class Main {
 
     private final ShardManager shardManager;
+    private final Dotenv config;
 
     public Main() throws LoginException {
+        config = Dotenv.configure().ignoreIfMissing().load();
+        String token = config.get("TOKEN");
         String NowPlaying = "Femboy Besties";
-        String Token = "MTA0OTc5OTg1NDYzNDg0MDA5NA.Ga-L2K.oOeTWZWuHe2Dj1baVprVvDWnUg7u8iBH9EYeH8";
-        DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(Token);
+        DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(token);
         builder.setStatus(OnlineStatus.ONLINE);
         builder.setActivity(Activity.playing(NowPlaying));
+        builder.enableIntents(GatewayIntent.MESSAGE_CONTENT);
         shardManager = builder.build();
+
+        shardManager.addEventListener(new MyListener());
     }
 
     public ShardManager getShardManager() {
         return shardManager;
     }
+    public Dotenv getConfig() { return config; }
 
     public static void main(String[] args) {
         try {
