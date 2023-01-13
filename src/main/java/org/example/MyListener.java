@@ -12,22 +12,21 @@ import java.util.EnumSet;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MyListener extends ListenerAdapter {
 
-    private String getPostsFromE621(String tags) throws IOException, InterruptedException {
+    private String getPostsFromE621(String tags) throws IOException, InterruptedException, JsonProcessingException {
         String url = "https://e621.net/posts.json?tags=" + tags + "+order:random&limit=1";
 
         HttpClient httpClient = HttpClient.newHttpClient();
@@ -43,14 +42,26 @@ public class MyListener extends ListenerAdapter {
             JsonNode postNode = jsonNode.get("posts");
             if (postNode.isArray() && postNode.size() > 0) {
                 JsonNode sampleNode = postNode.get(0).get("file").get("url");
-                return sampleNode.asText();
+                String imageUrl = sampleNode.asText();
+                try {
+                    HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
+                    connection.setRequestMethod("HEAD");
+                    if (connection.getResponseCode() == 200) {
+                        return imageUrl;
+                    } else {
+                        return "Invalid image URL.";
+                    }
+                } catch (IOException e) {
+                    return "Invalid image URL.";
+                }
             } else {
-                // handle error
+                return "No image URLs found.";
             }
-            return "error";
         }
-        return url;
+        return "Error.";
     }
+
+
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         Message message = event.getMessage();
@@ -69,10 +80,16 @@ public class MyListener extends ListenerAdapter {
             try {
                 String imageUrl = getPostsFromE621(search);
                 EmbedBuilder builder = new EmbedBuilder();
-                builder.setImage(imageUrl);
-                event.getGuild().getDefaultChannel().asStandardGuildMessageChannel().sendMessageEmbeds(builder.build()).queue();
+                HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
+                connection.setRequestMethod("HEAD");
+                if (connection.getResponseCode() == 200) {
+                    builder.setImage(imageUrl);
+                    event.getChannel().asGuildMessageChannel().sendMessageEmbeds(builder.build()).queue();
+                } else {
+                    event.getChannel().asGuildMessageChannel().sendMessage("");
+                }
             } catch (IOException e) {
-                event.getChannel().sendMessage("Error getting image: " + e.getMessage()).queue();
+                event.getChannel().sendMessage("One or more tags in  \" "+search+" \" is invalid! Please try again!").queue();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
