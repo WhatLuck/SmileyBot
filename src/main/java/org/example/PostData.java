@@ -12,29 +12,29 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
-class PostData {
-    private int postId;
-    private String url;
+public class PostData {
+    private static int postId;
+    private static String url;
 
     public void setUrl(String url) {
-        this.url = url;
+        PostData.url = url;
     }
-    public String getUrl() {
+    public static String getUrl() {
         return url;
     }
     public void setPostId(int postId) {
-        this.postId = postId;
+        PostData.postId = postId;
     }
-    public int getPostId() {
+    public static int getPostId() {
         return postId;
     }
 
     public PostData(String url, int postId) {
-        this.url = url;
-        this.postId = postId;
+        PostData.url = url;
+        PostData.postId = postId;
     }
 
-    private PostData getPostsFromE621(String tags) throws IOException, InterruptedException, JsonProcessingException {
+    private PostData getPostsFromE621(String tags) throws IOException, InterruptedException {
         String url = "https://e621.net/posts.json?tags=" + tags + "+order:random&limit=1";
 
         HttpClient httpClient = HttpClient.newHttpClient();
@@ -57,10 +57,9 @@ class PostData {
                     if (connection.getResponseCode() == 200) {
                         if (postNode.isArray() && postNode.size() > 0) {
                             JsonNode postIdNode = postNode.get(0).get("id");
-                            int Id = postIdNode.asInt();
-                            postId = Id;
+                            postId = postIdNode.asInt();
                         }
-                        postData.url=imageUrl;
+                        PostData.url =imageUrl;
                     } else {
 
                     }
