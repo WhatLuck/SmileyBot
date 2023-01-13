@@ -36,12 +36,14 @@ public class MyListener extends ListenerAdapter {
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
+        String postId = ""; // Initialize the postId variable
         if (response.statusCode() == 200) {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(response.body());
             JsonNode postNode = jsonNode.get("posts");
             if (postNode.isArray() && postNode.size() > 0) {
                 JsonNode sampleNode = postNode.get(0).get("file").get("url");
+                postId = postNode.get(0).get("id").asText(); // Extract
                 String imageUrl = sampleNode.asText();
                 try {
                     HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
@@ -60,6 +62,7 @@ public class MyListener extends ListenerAdapter {
         }
         return "Error.";
     }
+
 
 
     @Override
@@ -83,7 +86,11 @@ public class MyListener extends ListenerAdapter {
                 HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
                 connection.setRequestMethod("HEAD");
                 if (connection.getResponseCode() == 200) {
+
                     builder.setImage(imageUrl);
+                    builder.setTitle("Image via e621","https://e621.net/posts/");
+                    builder.setDescription("Searched Tag(s): " + search);
+                    builder.setColor(0xff6f00);
                     event.getChannel().asGuildMessageChannel().sendMessageEmbeds(builder.build()).queue();
                 } else {
                     event.getChannel().asGuildMessageChannel().sendMessage("");
