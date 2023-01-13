@@ -66,6 +66,7 @@ public class MyListener extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
+        boolean flag = true;
         Message message = event.getMessage();
         String content = message.getContentRaw();
         String[] command = content.split(" ");
@@ -77,10 +78,12 @@ public class MyListener extends ListenerAdapter {
             event.getGuild().getDefaultChannel().asStandardGuildMessageChannel().sendMessageEmbeds(builder.build()).queue();
         }
 
-        if (content.startsWith("!e621")) {
+        if (content.startsWith("!e621")&&flag) {
+            flag = false;
             String search = content.substring(6);
             search = search.replace(" ","+");
             try {
+                PostData postData = PostData.getPostsFromE621(search);
                 String imageUrl = PostData.getUrl();
                 int imageId = PostData.getPostId();
                 EmbedBuilder builder = new EmbedBuilder();
@@ -97,11 +100,14 @@ public class MyListener extends ListenerAdapter {
                     builder.setFooter(event.getAuthor().getName(), event.getAuthor().getAvatarUrl());
 
                     event.getChannel().asGuildMessageChannel().sendMessageEmbeds(builder.build()).queue();
+
                 } else {
                     event.getChannel().asGuildMessageChannel().sendMessage("");
                 }
             } catch (IOException e) {
                 event.getChannel().sendMessage("One or more tags in  \" "+search+" \" is invalid! Please try again!").queue();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
 

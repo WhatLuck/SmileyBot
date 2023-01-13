@@ -34,7 +34,7 @@ public class PostData {
         PostData.postId = postId;
     }
 
-    private PostData getPostsFromE621(String tags) throws IOException, InterruptedException {
+    public static PostData getPostsFromE621(String tags) throws IOException, InterruptedException {
         String url = "https://e621.net/posts.json?tags=" + tags + "+order:random&limit=1";
 
         HttpClient httpClient = HttpClient.newHttpClient();
@@ -43,34 +43,33 @@ public class PostData {
                 .uri(URI.create(url))
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        PostData postData = new PostData(url, postId);
         if (response.statusCode() == 200) {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(response.body());
             JsonNode postNode = jsonNode.get("posts");
             if (postNode.isArray() && postNode.size() > 0) {
-                JsonNode sampleNode = postNode.get(0).get("file").get("url");
-                String imageUrl = sampleNode.asText();
+                JsonNode fileNode = postNode.get(0).get("file");
+                String imageUrl = fileNode.get("url").asText();
+                int postId = postNode.get(0).get("id").asInt();
                 try {
                     HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
                     connection.setRequestMethod("HEAD");
                     if (connection.getResponseCode() == 200) {
-                        if (postNode.isArray() && postNode.size() > 0) {
-                            JsonNode postIdNode = postNode.get(0).get("id");
-                            postId = postIdNode.asInt();
-                        }
-                        PostData.url =imageUrl;
+                        return new PostData(imageUrl, postId);
                     } else {
-
+                        // Handle error
                     }
                 } catch (IOException e) {
-
+                    // Handle error
                 }
             } else {
-
+                // Handle error
             }
+        } else {
+            // Handle error
         }
-        return new PostData(url, postId);
+        return null;
     }
+
 
 }
