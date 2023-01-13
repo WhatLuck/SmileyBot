@@ -57,18 +57,21 @@ public class PostData {
                     if (connection.getResponseCode() == 200) {
                         return new PostData(imageUrl, postId);
                     } else {
-                        // Handle error
+                        System.out.println("Reached Error 1A");
+                        return new PostData(null,0 );
                     }
                 } catch (IOException e) {
-                    // Handle error
+                    System.out.println("Reached Error 2A");
+                    return new PostData(null,0 );
                 }
             } else {
-                // Handle error
+                System.out.println("Reached Error 3A");
+                return new PostData(null,0 );
             }
         } else {
-            // Handle error
+            System.out.println("Reached Error 4A");
+            return new PostData(null,0 );
         }
-        return null;
     }
 
 
