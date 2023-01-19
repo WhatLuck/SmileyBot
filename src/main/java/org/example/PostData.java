@@ -34,8 +34,10 @@ public class PostData {
         PostData.postId = postId;
     }
 
-    public static PostData getPostsFromE621(String tags) throws IOException, InterruptedException {
-        String url = "https://e621.net/posts.json?tags=" + tags + "+order:random&limit=1";
+    public static PostData getPostsFromE621(String tags,int site) throws IOException, InterruptedException {
+        String url = "";
+        if(site==1){ url = "https://e621.net/posts.json?tags=" + tags + "+order:random&limit=1";}
+        if(site==2){ url = "https://e621.net/posts.json?tags=" + tags + "+order:random&limit=1";}
 
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()

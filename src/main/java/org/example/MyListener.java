@@ -30,7 +30,7 @@ public class MyListener extends ListenerAdapter {
             String search = content.substring(6);
             search = search.replace(" ","+");
             try {
-                PostData postData = PostData.getPostsFromE621(search);
+                PostData postData = PostData.getPostsFromE621(search,1);
                 String imageUrl = PostData.getUrl();
                 int imageId = PostData.getPostId();
                 EmbedBuilder builder = new EmbedBuilder();
@@ -44,6 +44,36 @@ public class MyListener extends ListenerAdapter {
                     .setDescription("Searched Tag(s): " + search.replace("+",", "))
                     .setColor(0xff6f00)
                     .setFooter(event.getAuthor().getName(), event.getAuthor().getAvatarUrl());
+
+                    event.getChannel().asGuildMessageChannel().sendMessageEmbeds(builder.build()).queue();
+                } else {
+
+                }
+            } catch (IOException e) {
+                event.getChannel().sendMessage("One or more tags in  \" "+search+" \" is invalid! Please try again!").queue();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (content.startsWith("!r34")&&!event.getAuthor().isBot()) {
+            String search = content.substring(5);
+            search = search.replace(" ","+");
+            try {
+                PostData postData = PostData.getPostsFromE621(search,2);
+                String imageUrl = PostData.getUrl();
+                int imageId = PostData.getPostId();
+                EmbedBuilder builder = new EmbedBuilder();
+
+                HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
+                connection.setRequestMethod("HEAD");
+                if (connection.getResponseCode() == 200 ) {
+
+                    builder.setImage(imageUrl)
+                            .setTitle("Image via r34.xxx","https://rule34.xxx/index.php?page=post&s=view&id="+imageId)
+                            .setDescription("Searched Tag(s): " + search.replace("+",", "))
+                            .setColor(0x93C54B)
+                            .setFooter(event.getAuthor().getName(), event.getAuthor().getAvatarUrl());
 
                     event.getChannel().asGuildMessageChannel().sendMessageEmbeds(builder.build()).queue();
                 } else {

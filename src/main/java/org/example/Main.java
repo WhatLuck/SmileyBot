@@ -32,6 +32,7 @@ public class Main {
     public Dotenv getConfig() { return config; }
 
     public static void main(String[] args) {
+
         try {
             Main bot = new Main();
         } catch (LoginException e){
