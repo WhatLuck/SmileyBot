@@ -1,11 +1,15 @@
 package org.example;
 
 import java.io.File;
+import java.util.*;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.stream.Stream;
+
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -19,9 +23,13 @@ import net.dv8tion.jda.api.utils.FileUpload;
 public class MyListener extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
+                                                                                                    List<String> list = Arrays.asList("shota","loli","guro","gore","scat","young","child","toddler","poop","","");
+        String[] test = {"shota","loli","guro","gore","scat","young","child","toddler","poop"};
+
         Message message = event.getMessage();
         String content = message.getContentRaw();
         String[] args = content.split(" ");
+        String[] tags = content.split(" ");
 
         if (content.equals("!balls")) {
             EmbedBuilder builder = new EmbedBuilder();
@@ -29,9 +37,9 @@ public class MyListener extends ListenerAdapter {
             builder.setDescription("balls");
             event.getGuild().getDefaultChannel().asStandardGuildMessageChannel().sendMessageEmbeds(builder.build()).queue();
         }
-
-        if (content.startsWith("!e621")&&!event.getAuthor().isBot()) {
+        if (content.startsWith("!e621")&&!event.getAuthor().isBot()&&(!Arrays.asList(list).contains(Arrays.asList(tags))|| Arrays.asList(tags).contains("&bypass"))) {
             String search = content.substring(6);
+
             search = search.replace(" ","+");
             try {
                 PostData postData = PostData.getPostsFromE621(search,1);
@@ -49,7 +57,7 @@ public class MyListener extends ListenerAdapter {
                     .setColor(0xff6f00)
                     .setFooter(event.getAuthor().getName(), event.getAuthor().getAvatarUrl());
 
-                    event.getChannel().asGuildMessageChannel().sendMessageEmbeds(builder.build()).queue();
+                    event.getChannel().asGuildMessageChannel().sendMessageEmbeds(builder.build()).addActionRow().queue();
                 } else {
 
                 }
@@ -60,7 +68,7 @@ public class MyListener extends ListenerAdapter {
             }
         }
 
-        if (content.startsWith("!booru")&&!event.getAuthor().isBot()) {
+            if (content.startsWith("!booru")&&!event.getAuthor().isBot()&&(!Arrays.stream(test).anyMatch(content.substring(7)::contains) || content.substring(7).contains("&bypass")))){
             String search = content.substring(7);
             search = search.replace(" ","+");
             String url = "https://gelbooru.com/index.php?page=dapi&s=post&q=index&api_key=5985fd8c50a9c969f32688ae7a6cf66a7485b0a2e678c85aae6f8ab91da89f35&user_id=1171000&tags=" + search + "+sort:random&limit=1";
@@ -74,12 +82,12 @@ public class MyListener extends ListenerAdapter {
                     HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
                     connection.setRequestMethod("HEAD");
                     if (connection.getResponseCode() == 200 ) {
-                        Button refresh = Button.primary("","new");
+
                         builder.setImage(imageUrl)
                                 .setTitle("Image via gelbooru","https://gelbooru.com/index.php?page=post&s=view&id="+imageId)
                                 .setDescription("Searched Tag(s): " + search.replace("+",", "))
-                                .setColor(0x93C54B)
-                                .setFooter(event.getAuthor().getName(), event.getAuthor().getAvatarUrl());
+                                .setColor(0x3356FF)
+                                .setFooter("Searched by "+event.getAuthor().getName(), event.getAuthor().getAvatarUrl());
 
                         event.getChannel().asGuildMessageChannel().sendMessageEmbeds(builder.build()).queue();
 
@@ -116,8 +124,7 @@ public class MyListener extends ListenerAdapter {
                     event.getChannel().sendMessage("File not found").queue();
                     return;
                 }
-
-            event.getChannel().sendMessage(filename + " answer key; ").addFiles(file).queue();
+                event.getChannel().sendMessage(filename + " answer key; ").addFiles(FileUpload.fromData(file)).queue();
             }
 
     }
