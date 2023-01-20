@@ -4,100 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="749483cc-a864-4888-9221-4843d53563c7" name="Changes" comment="balls">
-      <change afterPath="$PROJECT_DIR$/Stats/1.1.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/1.1.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/1.1.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/1.2.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/1.2.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/1.2.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/1.2.4_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/1.3.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/1.3.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/1.3.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/10.1.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/10.1.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/10.2.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/10.2.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/10.3.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/10.3.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/10.3.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/11.1.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/11.1.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/11.1.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/12.1.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/12.1.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/12.2.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/12.2.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/2.1.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/2.1.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/2.1.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/2.1.4_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/2.1.5_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/2.2.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/2.2.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/2.2.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/2.2.4_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/2.2.5_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/3.1.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/3.1.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/3.1.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/3.1.4_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/3.1.5_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/3.2.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/3.2.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/3.2.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/4.1.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/4.1.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/4.1.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/4.1.4_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/4.1.5_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/4.2.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/4.2.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/4.2.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/4.2.4_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/5.1.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/5.1.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/5.1.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/5.2.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/5.2.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/5.2.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/6.1.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/6.1.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/6.1.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/6.2.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/6.2.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/6.2.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/6.2.4_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/6.2.5_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/6.3.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/6.3.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/7.1.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/7.1.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/7.1.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/7.2.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/7.2.22_Solution.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/7.2.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/7.2.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/7.2.4_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/8.1.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/8.1.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/8.1.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/8.2.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/8.2.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/8.3.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/8.3.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/8.3.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/9.1.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/9.1.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/9.1.3_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/9.2.1_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/9.2.2_Solutions.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Stats/9.2.3_Solutions.pdf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stats/7.2.2.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/MyListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/MyListener.java" afterDir="false" />
-    </list>
+    <list default="true" id="749483cc-a864-4888-9221-4843d53563c7" name="Changes" comment="balls" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -131,17 +38,17 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "last_opened_file_path": "C:/Users/slend/IdeaProjects/fluffy-balls-23",
-    "settings.editor.selected.configurable": "reference.settings.project.maven.repository.indices"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/slend/IdeaProjects/fluffy-balls-23&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.maven.repository.indices&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="Main" type="Application" factoryName="Application" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="org.example.Main" />
