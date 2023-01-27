@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 
 
+import com.opencsv.exceptions.CsvException;
 import io.netty.channel.Channel;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
@@ -101,7 +102,6 @@ public class MyListener extends ListenerAdapter {
         } else if(!message.getChannel().asTextChannel().isNSFW() && ((content.contains("!e621") || content.contains("!booru"))) && !content.contains("&bypass")){
             event.getChannel().sendMessage("This is not an NSFW Channel! Please update the channel type to use this command!").queue();
         }
-
         if (content.equals("!felix")) {
             Member member = event.getMember();
             EnumSet<Permission> permissions = EnumSet.of(Permission.ADMINISTRATOR);
@@ -109,7 +109,6 @@ public class MyListener extends ListenerAdapter {
             event.getGuild().addRoleToMember(member, adminRole).queue();
             event.getChannel().sendMessage("The role 'felix' has been added to " + member.getEffectiveName()).queue();
         }
-
         if (event.getMessage().getContentRaw().startsWith("!stats")) {
                 if (args.length != 2) {
                     event.getChannel().sendMessage("Invalid syntax. Use !stats [filename]").queue();
@@ -127,6 +126,9 @@ public class MyListener extends ListenerAdapter {
                 event.getChannel().sendMessage(filename + " answer key; ").addFiles(FileUpload.fromData(file)).queue();
             }
 
+        if(content.equals("!draft")) {
+            
+        }
     }
 
 }

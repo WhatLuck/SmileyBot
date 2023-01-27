@@ -1,37 +1,31 @@
 package org.example;
 
-import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Random;
 
 public class CsvParse {
-    public static void main(String[] args) throws IOException, CsvException {
-        String filePath = "C:\\Users\\slend\\IdeaProjects\\mega-balls-29\\CSV\\Untitled spreadsheet - Sheet1.csv";
+    public static String[] main(String[] args) throws IOException, CsvException {
+        String filePath = "C:\\Users\\slend\\Documents\\GitHub\\mega-balls-29\\CSV\\Draft League  - Sheet1 (1).csv";
         BufferedReader br = new BufferedReader(new FileReader(filePath));
         String line = "";
         // Xerneas,Latios,Alazkazam,Amoongus,Bewear
         int commas = arrSize(filePath)[0];
         int lines = arrSize(filePath)[1];
         String[][] data = new String[lines][commas+1];
-        System.out.println(data.length);
-        System.out.println(data[0].length);
-
         for(int i = 0; i<lines; i++){
             line = br.readLine();
-
             String[] temp = line.split(",\\s*");
-
-            System.out.println(Arrays.toString(temp));
             for (int j = 0; j < temp.length; j++) {
                 data[i][j] = temp[j];
+                if(data[i][j] == "")
+                    data[i][j] = null;
             }
         }
-        System.out.println(Arrays.deepToString(data));
+        return randomVar(data,5, filePath);
     }
     public static int[] arrSize(String filePath) throws IOException, CsvException {
         BufferedReader br = new BufferedReader(new FileReader(filePath));
@@ -49,4 +43,23 @@ public class CsvParse {
         }
         return new int[]{cc, lines};
     }
+
+    public static String[] randomVar(String[][] arr, int n, String filePath) throws IOException, CsvException {
+        int commas = arrSize(filePath)[0];
+        int lines = arrSize(filePath)[1];
+        Random random = new Random();
+        String[] randoms = new String[n];
+        for(int i = 0; i<n; i++){
+            int[] rNumbs;
+            do {
+                rNumbs = new int[]{random.nextInt(commas - 1) + 1, random.nextInt(lines - 1) + 1};
+            } while(arr[rNumbs[0]][rNumbs[1]] == null || Arrays.asList(randoms).contains(arr[rNumbs[0]][rNumbs[1]]));
+
+            randoms[i] = arr[rNumbs[0]][rNumbs[1]];
+            System.out.println(Arrays.toString(rNumbs));
+        }
+
+        return randoms;
+    }
+    //
 }
