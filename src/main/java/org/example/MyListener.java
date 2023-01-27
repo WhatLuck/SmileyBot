@@ -1,17 +1,18 @@
 package org.example;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Random;
 
 
 import com.opencsv.exceptions.CsvException;
 import io.netty.channel.Channel;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -19,6 +20,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
+
 
 public class MyListener extends ListenerAdapter {
     @Override
@@ -127,8 +129,84 @@ public class MyListener extends ListenerAdapter {
             }
 
         if(content.equals("!draft")) {
-            
+            String filePath = "C:\\Users\\slend\\Documents\\GitHub\\mega-balls-29\\CSV\\Draft League  - Sheet1 (1).csv";
+            BufferedReader br = null;
+            try {
+                br = new BufferedReader(new FileReader(filePath));
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+            String line = "";
+            // Xerneas,Latios,Alazkazam,Amoongus,Bewear
+            int commas = 0;
+            try {
+                commas = arrSize(filePath)[0];
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (CsvException e) {
+                throw new RuntimeException(e);
+            }
+            int lines = 0;
+            try {
+                lines = arrSize(filePath)[1];
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (CsvException e) {
+                throw new RuntimeException(e);
+            }
+            String[][] data = new String[lines][commas+1];
+            for(int i = 0; i<lines; i++){
+                try {
+                    line = br.readLine();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                String[] temp = line.split(",\\s*");
+                for (int j = 0; j < temp.length; j++) {
+                    data[i][j] = temp[j];
+                    if(data[i][j] == "")
+                        data[i][j] = null;
+                }
+            }
+
+            String[] chosenPokemon = randomVar(data, 5);
+            for (String pokemon : chosenPokemon) {
+                event.getChannel().sendMessage("You have drafted: " + pokemon).queue(message1 -> message1.addReaction(""));
+            }
+
         }
     }
+
+    public static int[] arrSize(String filePath) throws IOException, CsvException {
+        BufferedReader br = new BufferedReader(new FileReader(filePath));
+        String line = br.readLine();
+        int cc = 0;
+        int lines = 0;
+        int charAt = 0;
+        while(charAt < line.length()){
+            if(line.charAt(charAt)==',')
+                cc++;
+            charAt++;
+        }
+        while((line = br.readLine()) != null){
+            lines++;
+        }
+        return new int[]{cc, lines};
+    }
+    public static String[] randomVar(String[][] arr, int n) {
+        Random random = new Random();
+        String[] randoms = new String[n];
+        for(int i = 0; i<n; i++){
+            int[] rNumbs;
+            do {
+                rNumbs = new int[]{random.nextInt(arr.length - 1), random.nextInt(arr[0].length - 1)+1};
+            } while(arr[rNumbs[0]][rNumbs[1]] == null || Arrays.asList(randoms).contains(arr[rNumbs[0]][rNumbs[1]]));
+
+            randoms[i] = arr[rNumbs[0]][rNumbs[1]];
+        }
+
+        return randoms;
+    }
+
 
 }
