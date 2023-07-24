@@ -5,13 +5,16 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
-
+import java.awt.AWTException;
 import javax.security.auth.login.LoginException;
+import java.awt.*;
 
 public class Main {
 
     private final ShardManager shardManager;
     private final Dotenv config;
+
+    static Robot robot;
 
     public Main() throws LoginException {
         config = Dotenv.configure().ignoreIfMissing().load();
@@ -22,7 +25,6 @@ public class Main {
         builder.setActivity(Activity.playing(NowPlaying));
         builder.enableIntents(GatewayIntent.MESSAGE_CONTENT);
         shardManager = builder.build();
-
         shardManager.addEventListener(new MyListener());
     }
 
