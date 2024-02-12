@@ -19,7 +19,7 @@ public class Main {
     public Main() throws LoginException {
         config = Dotenv.configure().ignoreIfMissing().load();
         String token = config.get("TOKEN");
-        String NowPlaying = "Femboy Besties";
+        String NowPlaying = "test";
         DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(token);
         builder.setStatus(OnlineStatus.ONLINE);
         builder.setActivity(Activity.playing(NowPlaying));
