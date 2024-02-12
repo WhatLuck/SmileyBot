@@ -30,6 +30,7 @@ public class Main {
         builder.setStatus(OnlineStatus.ONLINE);
         builder.setActivity(Activity.playing(NowPlaying));
         builder.enableIntents(GatewayIntent.MESSAGE_CONTENT);
+        builder.enableIntents(GatewayIntent.GUILD_MEMBERS);
         shardManager = builder.build();
         shardManager.addEventListener(new MyListener());
 
