@@ -1,20 +1,26 @@
 package org.example;
 import io.github.cdimascio.dotenv.Dotenv;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
-import java.awt.AWTException;
 import javax.security.auth.login.LoginException;
-import java.awt.*;
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+
+import static org.example.MyListener.registerCommands;
 
 public class Main {
 
     private final ShardManager shardManager;
-    private final Dotenv config;
 
-    static Robot robot;
+    private final Dotenv config;
 
     public Main() throws LoginException {
         config = Dotenv.configure().ignoreIfMissing().load();
@@ -26,11 +32,27 @@ public class Main {
         builder.enableIntents(GatewayIntent.MESSAGE_CONTENT);
         shardManager = builder.build();
         shardManager.addEventListener(new MyListener());
+
+        MyListener myListener = new MyListener();
+        shardManager.addEventListener(new ListenerAdapter() {
+            @Override
+            public void onReady(ReadyEvent event) {
+                myListener.onReady(event);
+            }
+        });
+
+        shardManager.addEventListener(new ListenerAdapter() {
+            @Override
+            public void onGuildJoin(GuildJoinEvent event) {
+                myListener.onGuildJoin(event);
+            }
+        });
     }
 
     public ShardManager getShardManager() {
         return shardManager;
     }
+
     public Dotenv getConfig() { return config; }
 
     public static void main(String[] args) {
