@@ -6,14 +6,13 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
-import net.dv8tion.jda.api.managers.channel.concrete.CategoryManager;
 
 import java.awt.*;
 import java.io.BufferedReader;
@@ -315,7 +314,6 @@ public class CommandSpace {
         }
     }
 
-
     public static void setupNewServer(SlashCommandInteractionEvent event, Guild guild, Member member) {
 
         if (!member.isOwner() && !member.hasPermission(Permission.ADMINISTRATOR) && !member.getRoles().contains(serverManagerRole)) {
@@ -378,7 +376,6 @@ public class CommandSpace {
         }
     }
 
-
     public static void resetServerSetup(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
         Member member = event.getMember();
@@ -415,6 +412,114 @@ public class CommandSpace {
     }
 
     private static List<PostData> getTodoAssignmentsFromCanvas(SlashCommandInteractionEvent event) throws IOException, InterruptedException {
+        String studentId = null;
+        String studentAPI = null;
+        String platformURL = null;
+
+        // Retrieve the student API key, student ID, and platform URL from the database
+        String sql = "SELECT apiKey, studentId, platformURL FROM userData WHERE discordId = ?";
+        try (Connection connection = DriverManager.getConnection(JDBC_DATABASE_URL);
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, event.getUser().getId());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                studentAPI = resultSet.getString("apiKey");
+                studentId = resultSet.getString("studentId");
+                platformURL = resultSet.getString("platformURL");
+                System.out.println("Api key: " + studentAPI + "  studentID: " + studentId);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        // If both student API key, student ID, and platform URL are retrieved, proceed with the API request
+        if (studentAPI != null && studentId != null && platformURL != null) {
+            String todoUrl = platformURL + "/api/v1/users/self/todo"; // Construct the API request URL using platformURL
+            HttpClient httpClient = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .GET()
+                    .uri(URI.create(todoUrl + "?access_token=" + studentAPI))
+                    .build();
+            System.out.println(todoUrl + "?access_token=" + studentAPI);
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                return PostData.parseJSONAssignments(response.body());
+            } else {
+                System.out.println("Failed to retrieve TODO assignments. HTTP Status: " + response.statusCode());
+            }
+        } else {
+            System.out.println("Failed to retrieve API key, student ID, or platform URL from the database.");
+        }
+
+        return new ArrayList<>(); // Return an empty list if the API request fails or necessary data is missing
+    }
+
+    public static void getEnrollmentInfo(SlashCommandInteractionEvent event) throws IOException, InterruptedException {
+        String studentAPI = null;
+        String platformURL = null;
+
+        // Retrieve the student API key, student ID, and platform URL from the database
+        String sql = "SELECT apiKey, studentId, platformURL FROM userData WHERE discordId = ?";
+        try (Connection connection = DriverManager.getConnection(JDBC_DATABASE_URL);
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, event.getUser().getId());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                studentAPI = resultSet.getString("apiKey");
+                platformURL = resultSet.getString("platformURL");
+                System.out.println("Api key: " + studentAPI + "  studentID: " + resultSet.getString("studentId"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        // If both student API key, student ID, and platform URL are retrieved, proceed with the API request
+        if (studentAPI != null && platformURL != null) {
+            String enrollmentURL = platformURL + "/api/v1/users/self/enrollments"; // Construct the API request URL using platformURL
+            HttpClient httpClient = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .GET()
+                    .uri(URI.create(enrollmentURL + "?access_token=" + studentAPI))
+                    .build();
+            System.out.println(enrollmentURL + "?access_token=" + studentAPI);
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                List<GradeData.EnrollmentData> enrollments = GradeData.parseEnrollmentData(response.body(), event.getUser().getId());
+                EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .setAuthor("User Grade Report")
+                        .setColor(Color.decode("#7d47b3"))
+                        .setTimestamp(Instant.now());
+
+                StringBuilder descriptionBuilder = new StringBuilder();
+                descriptionBuilder.append("Below are your current grades in your enrollments:\n\n");
+
+                for (GradeData.EnrollmentData enrollment : enrollments) {
+                    descriptionBuilder.append(enrollment.getCourseName()).append("\n");
+                    descriptionBuilder.append("**Course Name:** ").append(enrollment.getCourseName()).append("\n");
+                    descriptionBuilder.append("> Current Grade: ").append(enrollment.getRegularScore()).append("\n\n");
+                }
+
+                embedBuilder.setDescription(descriptionBuilder.toString());
+
+                event.replyEmbeds(embedBuilder.build()).queue();
+            } else {
+                System.out.println("Failed to retrieve enrollments. HTTP Status: " + response.statusCode());
+            }
+        } else {
+            System.out.println("Failed to retrieve API key or platform URL from the database.");
+        }
+     }
+
+    public static String getCourseName(String discordId, String courseID) throws IOException, InterruptedException {
+
+        return null;
+    }
+
+
+
+    private static List<PostData> getGradingReport(SlashCommandInteractionEvent event) throws IOException, InterruptedException {
         String studentId = null;
         String studentAPI = null;
         String platformURL = null;

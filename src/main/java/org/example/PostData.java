@@ -214,6 +214,7 @@ public class PostData {
         return assignments;
     }
 
+
     private static String getNodeTextContent(Node parentNode, String tagName) {
         Node node = ((Element) parentNode).getElementsByTagName(tagName).item(0);
         return node != null ? node.getTextContent() : "";

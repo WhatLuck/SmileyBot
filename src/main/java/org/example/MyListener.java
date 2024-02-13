@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.UserSnowflake;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
@@ -56,7 +53,8 @@ public class MyListener extends ListenerAdapter {
                 Commands.slash("setuphelp", "Help page for user profiling"),
                 Commands.slash("deletedata", "Removes user data from database"),
                 Commands.slash("setupserver", "Not accessible to regular users"),
-                Commands.slash("resetserver", "Not accessible to regular users")
+                Commands.slash("resetserver", "Not accessible to regular users"),
+                Commands.slash("gradereport", "Accesses user's enrolled course and pulls grades")
                 ).queue();
     }
 
@@ -120,6 +118,15 @@ public class MyListener extends ListenerAdapter {
                 break;
             case "resetserver":
                 CommandSpace.resetServerSetup(event);
+                break;
+            case "gradereport":
+                try {
+                    CommandSpace.getEnrollmentInfo(event);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
                 break;
             default:
                 break;
