@@ -455,38 +455,14 @@ public class CommandSpace {
         return new ArrayList<>(); // Return an empty list if the API request fails or necessary data is missing
     }
 
-    public static void getEnrollmentInfo(SlashCommandInteractionEvent event) throws IOException, InterruptedException {
-        String studentAPI = null;
-        String platformURL = null;
+    public static void getEnrollmentInfo(SlashCommandInteractionEvent event, Member member) throws IOException, InterruptedException {
 
-        // Retrieve the student API key, student ID, and platform URL from the database
-        String sql = "SELECT apiKey, studentId, platformURL FROM userData WHERE discordId = ?";
-        try (Connection connection = DriverManager.getConnection(JDBC_DATABASE_URL);
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, event.getUser().getId());
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                studentAPI = resultSet.getString("apiKey");
-                platformURL = resultSet.getString("platformURL");
-                System.out.println("Api key: " + studentAPI + "  studentID: " + resultSet.getString("studentId"));
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        Boolean favoriteFilter = null;
+        if (event.getOption("favoritefilter") != null) {
+            favoriteFilter = event.getOption("favoritefilter").getAsBoolean();
         }
 
-        // If both student API key, student ID, and platform URL are retrieved, proceed with the API request
-        if (studentAPI != null && platformURL != null) {
-            String enrollmentURL = platformURL + "/api/v1/users/self/enrollments"; // Construct the API request URL using platformURL
-            HttpClient httpClient = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .GET()
-                    .uri(URI.create(enrollmentURL + "?access_token=" + studentAPI))
-                    .build();
-            System.out.println(enrollmentURL + "?access_token=" + studentAPI);
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-            if (response.statusCode() == 200) {
-                List<GradeData.EnrollmentData> enrollments = GradeData.parseEnrollmentData(response.body(), event.getUser().getId());
+                List<GradeData.EnrollmentData> enrollments = GradeData.fetchCourseData(member.getId(), favoriteFilter);
                 EmbedBuilder embedBuilder = new EmbedBuilder()
                         .setAuthor("User Grade Report")
                         .setColor(Color.decode("#7d47b3"))
@@ -496,26 +472,15 @@ public class CommandSpace {
                 descriptionBuilder.append("Below are your current grades in your enrollments:\n\n");
 
                 for (GradeData.EnrollmentData enrollment : enrollments) {
-                    descriptionBuilder.append(enrollment.getCourseName()).append("\n");
                     descriptionBuilder.append("**Course Name:** ").append(enrollment.getCourseName()).append("\n");
-                    descriptionBuilder.append("> Current Grade: ").append(enrollment.getRegularScore()).append("\n\n");
+                    descriptionBuilder.append("> Current Grade: **").append(enrollment.getCourseGrade()).append("**\n\n");
                 }
 
                 embedBuilder.setDescription(descriptionBuilder.toString());
 
                 event.replyEmbeds(embedBuilder.build()).queue();
-            } else {
-                System.out.println("Failed to retrieve enrollments. HTTP Status: " + response.statusCode());
-            }
-        } else {
-            System.out.println("Failed to retrieve API key or platform URL from the database.");
-        }
+
      }
-
-    public static String getCourseName(String discordId, String courseID) throws IOException, InterruptedException {
-
-        return null;
-    }
 
 
 

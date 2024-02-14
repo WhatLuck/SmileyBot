@@ -15,7 +15,9 @@ import java.util.List;
 public class GradeData {
     private static final String JDBC_DATABASE_URL = "jdbc:sqlite:database.db";
 
-    public static List<GradeData.EnrollmentData> parseEnrollmentData(String jsonContent, String discordId) {
+
+    static List<GradeData.EnrollmentData> fetchCourseData(String discordId, Boolean favoriteFilter) {
+
         String studentAPI = null;
         String platformURL = null;
 
@@ -35,36 +37,12 @@ public class GradeData {
         }
 
         List<GradeData.EnrollmentData> enrollments = new ArrayList<>();
+        int highestTermId = 0; // Initialize highest term ID
 
-        if (studentAPI != null && platformURL != null) {
-            try {
-                ObjectMapper objectMapper = new ObjectMapper();
-                JsonNode rootNode = objectMapper.readTree(jsonContent);
-
-                for (JsonNode enrollmentNode : rootNode) {
-                    int courseId = enrollmentNode.path("course").path("id").asInt();
-                    double finalScore = enrollmentNode.path("grades").path("final_score").asDouble();
-                    double regularScore = enrollmentNode.path("grades").path("current_score").asDouble();
-
-                    // Fetch course name from the Canvas API
-                    String courseName = fetchCourseName(courseId, studentAPI, platformURL);
-
-                    enrollments.add(new GradeData.EnrollmentData(courseName, courseId, finalScore, regularScore));
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println("Failed to retrieve API key or platform URL from the database.");
-        }
-
-        return enrollments;
-    }
-
-    private static String fetchCourseName(int courseId, String studentAPI, String platformURL) {
-        String courseName = "";
         try {
-            String courseURL = platformURL + "/api/v1/courses/" + courseId + "?access_token=" + studentAPI;
+            // Retrieve course data from the platform
+            String courseURL = platformURL + "/api/v1/users/self/courses?include[]=total_scores&include[]=term&include[]=favorites&access_token=" + studentAPI;
+            System.out.println(courseURL);
             HttpClient httpClient = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
                     .GET()
@@ -76,27 +54,67 @@ public class GradeData {
             if (response.statusCode() == 200) {
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode rootNode = objectMapper.readTree(response.body());
-                courseName = rootNode.path("name").asText();
+
+                // Find the highest term ID across all courses
+                for (JsonNode courseNode : rootNode) {
+                    JsonNode termNode = courseNode.get("term");
+                    if (termNode != null && termNode.has("id")) {
+                        int termId = termNode.get("id").asInt();
+                        highestTermId = Math.max(highestTermId, termId);
+                    }
+                }
+
+                // Iterate over each course in the JSON response
+                for (JsonNode courseNode : rootNode) {
+                    JsonNode termNode = courseNode.get("term");
+                    if (termNode != null && termNode.has("id")) {
+                        int termId = termNode.get("id").asInt();
+                        if (termId < highestTermId) {
+                            continue; // Skip this course if its term ID is less than the highest term ID
+                        }
+                    }
+
+                    favoriteFilter = (favoriteFilter == null) ? false : favoriteFilter;
+                    // Check if the favorite filter is active and if the course is a favorite
+                    if ((favoriteFilter) && !(courseNode.has("is_favorite") && courseNode.get("is_favorite").asBoolean())) {
+                        continue; // Skip this course if the favorite filter is true (or null) and it's not a favorite
+                    }
+
+                    // Extract course data
+                    String courseName = courseNode.path("name").asText();
+                    int courseId = courseNode.path("id").asInt();
+                    String courseCode = courseNode.path("course_code").asText();
+
+                    // Check if enrollments exist
+                    JsonNode enrollmentsNode = courseNode.get("enrollments");
+                    if (enrollmentsNode != null && enrollmentsNode.isArray() && enrollmentsNode.size() > 0) {
+                        double courseGrade = enrollmentsNode.get(0).get("computed_current_score").asDouble();
+                        enrollments.add(new GradeData.EnrollmentData(courseName, courseId, courseCode, courseGrade));
+                    } else {
+                        System.out.println("No enrollment data found for course: " + courseName);
+                    }
+                }
             } else {
                 System.out.println("Failed to retrieve course information. HTTP Status: " + response.statusCode());
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-        return courseName;
+        return enrollments;
     }
+
 
     public static class EnrollmentData {
         private String courseName;
         private int courseId;
-        private double finalScore;
-        private double regularScore;
+        private String courseCode;
+        private double courseGrade;
 
-        public EnrollmentData(String courseName, int courseId, double finalScore, double regularScore) {
+        public EnrollmentData(String courseName, int courseId, String courseCode, double courseGrade) {
             this.courseName = courseName;
             this.courseId = courseId;
-            this.finalScore = finalScore;
-            this.regularScore = regularScore;
+            this.courseCode = courseCode;
+            this.courseGrade = courseGrade;
         }
 
         public String getCourseName() {
@@ -107,12 +125,10 @@ public class GradeData {
             return courseId;
         }
 
-        public double getFinalScore() {
-            return finalScore;
-        }
+        public String getCourseCode() { return courseCode; }
 
-        public double getRegularScore() {
-            return regularScore;
+        public double getCourseGrade() {
+            return courseGrade;
         }
     }
 }

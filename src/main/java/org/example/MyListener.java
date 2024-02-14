@@ -21,6 +21,7 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -39,6 +40,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class MyListener extends ListenerAdapter {
 
@@ -55,18 +57,19 @@ public class MyListener extends ListenerAdapter {
                 Commands.slash("setupserver", "Not accessible to regular users"),
                 Commands.slash("resetserver", "Not accessible to regular users"),
                 Commands.slash("gradereport", "Accesses user's enrolled course and pulls grades")
+                        .addOption(OptionType.BOOLEAN, "favoritefilter", "Filters the report by only favorited courses")
                 ).queue();
     }
 
     @Override
-    public void onReady(ReadyEvent event) {
+    public void onReady(@NotNull ReadyEvent event) {
         super.onReady(event);
         for (Guild guild : event.getJDA().getGuilds()) {
             registerCommands(guild);
         }
     }
     @Override
-    public void onGuildJoin(GuildJoinEvent event) {
+    public void onGuildJoin(@NotNull GuildJoinEvent event) {
         super.onGuildJoin(event);
         registerCommands(event.getGuild());
     }
@@ -83,11 +86,10 @@ public class MyListener extends ListenerAdapter {
         }
     }
 
-    private final String JDBC_DATABASE_URL = "jdbc:sqlite:database.db";
-
     @Override
-    public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
 
+        String JDBC_DATABASE_URL = "jdbc:sqlite:database.db";
         try (Connection connection = DriverManager.getConnection(JDBC_DATABASE_URL)) {
             CommandSpace.createTableIfNotExists(connection);
         } catch (SQLException e) {
@@ -98,38 +100,29 @@ public class MyListener extends ListenerAdapter {
         Member member = event.getMember();
 
         switch (event.getName()) {
-            case "setapi":
+            case "setapi" -> {
+                assert member != null;
                 CommandSpace.handleSetAPI(event, member);
-                break;
-            case "getdata":
-                CommandSpace.handleGetData(event);
-                break;
-            case "todo":
-                CommandSpace.handleTodo(event);
-                break;
-            case "setuphelp":
-                CommandSpace.handleSetupHelp(event);
-                break;
-            case "deletedata":
-                CommandSpace.handleDeleteData(event, event.getGuild(), member);
-                break;
-            case "setupserver":
+            }
+            case "getdata" -> CommandSpace.handleGetData(event);
+            case "todo" -> CommandSpace.handleTodo(event);
+            case "setuphelp" -> CommandSpace.handleSetupHelp(event);
+            case "deletedata" -> CommandSpace.handleDeleteData(event, Objects.requireNonNull(event.getGuild()), member);
+            case "setupserver" -> {
+                assert member != null;
                 CommandSpace.setupNewServer(event, event.getGuild(), member);
-                break;
-            case "resetserver":
-                CommandSpace.resetServerSetup(event);
-                break;
-            case "gradereport":
+            }
+            case "resetserver" -> CommandSpace.resetServerSetup(event);
+            case "gradereport" -> {
                 try {
-                    CommandSpace.getEnrollmentInfo(event);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                } catch (InterruptedException e) {
+                    assert member != null;
+                    CommandSpace.getEnrollmentInfo(event, member);
+                } catch (IOException | InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                break;
-            default:
-                break;
+            }
+            default -> {
+            }
         }
 
     }
