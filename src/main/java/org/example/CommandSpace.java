@@ -1,6 +1,7 @@
 package org.example;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -15,9 +16,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
@@ -35,6 +34,8 @@ import java.util.EnumSet;
 import java.util.List;
 
 public class CommandSpace {
+    private static final String CENSOR_FILE_PATH = System.getProperty("user.dir") + "/censor.txt";
+
     private static final String JDBC_DATABASE_URL = "jdbc:sqlite:database.db";
     public static Role serverManagerRole;
     public static Role verifiedRole;
@@ -133,6 +134,19 @@ public class CommandSpace {
                 .setAuthor("User profile setup", null, null)
                 .setDescription(descriptionHelp)
                 .setColor(0x00b0f4)
+                .setTimestamp(Instant.now());
+
+        event.replyEmbeds(embedBuilder.build()).queue();
+    }
+    static void handleCommandHelp(SlashCommandInteractionEvent event){
+        EmbedBuilder embedBuilder = new EmbedBuilder()
+                .setAuthor("Command Index", null, null)
+                .setDescription("Below are the list of usable commands, \nthose listed in the field [ ADMIN ] are\nonly usable by server operators, those with \nadministrator, and the \"Server Manager\" role.")
+                .addField("Help Index", "`setupHelp` `commandHelp`", false)
+                .addField("API Usage", "`setApi` `getData` `deleteData`", false)
+                .addField("Canvas Information", "`Todo` `GradeReport`", false)
+                .addField("Server Properties [ ADMIN ]", "`resetServer` `setupServer` `toggleCensor`", false)
+                .setColor(0xdef09e)
                 .setTimestamp(Instant.now());
 
         event.replyEmbeds(embedBuilder.build()).queue();
@@ -314,7 +328,7 @@ public class CommandSpace {
         }
     }
 
-    public static void setupNewServer(SlashCommandInteractionEvent event, Guild guild, Member member) {
+    static void setupNewServer(SlashCommandInteractionEvent event, Guild guild, Member member) {
 
         if (!member.isOwner() && !member.hasPermission(Permission.ADMINISTRATOR) && !member.getRoles().contains(serverManagerRole)) {
             // If the member does not meet the criteria, send an ephemeral reply
@@ -376,7 +390,7 @@ public class CommandSpace {
         }
     }
 
-    public static void resetServerSetup(SlashCommandInteractionEvent event) {
+    static void resetServerSetup(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
         Member member = event.getMember();
 
@@ -411,7 +425,7 @@ public class CommandSpace {
                 .queue();
     }
 
-    private static List<PostData> getTodoAssignmentsFromCanvas(SlashCommandInteractionEvent event) throws IOException, InterruptedException {
+    static List<PostData> getTodoAssignmentsFromCanvas(SlashCommandInteractionEvent event) throws IOException, InterruptedException {
         String studentId = null;
         String studentAPI = null;
         String platformURL = null;
@@ -455,7 +469,7 @@ public class CommandSpace {
         return new ArrayList<>(); // Return an empty list if the API request fails or necessary data is missing
     }
 
-    public static void getEnrollmentInfo(SlashCommandInteractionEvent event, Member member) throws IOException, InterruptedException {
+    static void getEnrollmentInfo(SlashCommandInteractionEvent event, Member member) throws IOException, InterruptedException {
 
         Boolean favoriteFilter = null;
         if (event.getOption("favoritefilter") != null) {
@@ -482,9 +496,7 @@ public class CommandSpace {
 
      }
 
-
-
-    private static List<PostData> getGradingReport(SlashCommandInteractionEvent event) throws IOException, InterruptedException {
+    static List<PostData> getGradingReport(SlashCommandInteractionEvent event) throws IOException, InterruptedException {
         String studentId = null;
         String studentAPI = null;
         String platformURL = null;
@@ -542,7 +554,7 @@ public class CommandSpace {
         }
     }
 
-    private String sendGetRequest(String urlString) throws IOException {
+    static String sendGetRequest(String urlString) throws IOException {
         StringBuilder response = new StringBuilder();
 
         URL url = new URL(urlString);
@@ -558,4 +570,6 @@ public class CommandSpace {
 
         return response.toString();
     }
+
+
 }

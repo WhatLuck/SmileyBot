@@ -102,6 +102,58 @@ public class GradeData {
         }
         return enrollments;
     }
+    static List<GradeData.CourseData> fetchCourseName(String discordId) {
+        String studentAPI = null;
+        String platformURL = null;
+
+        try (Connection connection = DriverManager.getConnection(JDBC_DATABASE_URL)) {
+            String sql = "SELECT apiKey, platformURL FROM userData WHERE discordId = ?";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, discordId);
+                ResultSet resultSet = statement.executeQuery();
+                if (resultSet.next()) {
+                    studentAPI = resultSet.getString("apiKey");
+                    platformURL = resultSet.getString("platformURL");
+                    System.out.println("Api key: " + studentAPI);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to retrieve data from the database.", e);
+        }
+
+        List<GradeData.CourseData> courses = new ArrayList<>();
+
+        try {
+            // Retrieve course data from the platform
+            String courseURL = platformURL + "/api/v1/users/self/courses?include[]=total_scores&include[]=term&include[]=favorites&access_token=" + studentAPI;
+            System.out.println(courseURL);
+            HttpClient httpClient = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .GET()
+                    .uri(URI.create(courseURL))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode rootNode = objectMapper.readTree(response.body());
+
+                // Iterate over each course in the JSON response
+                for (JsonNode courseNode : rootNode) {
+                    // Extract course data
+                    String courseName = courseNode.path("name").asText();
+                    int courseId = courseNode.path("id").asInt();
+                    courses.add(new CourseData(courseName, courseId));
+                }
+            } else {
+                System.out.println("Failed to retrieve course information. HTTP Status: " + response.statusCode());
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return courses;
+    }
 
 
     public static class EnrollmentData {
@@ -129,6 +181,23 @@ public class GradeData {
 
         public double getCourseGrade() {
             return courseGrade;
+        }
+    }
+
+    public static class CourseData {
+        private String courseName;
+        private int courseId;
+
+        public CourseData(String courseName, int courseId) {
+            this.courseName = courseName;
+            this.courseId = courseId;
+        }
+        public String getCourseName() {
+            return courseName;
+        }
+
+        public int getCourseId() {
+            return courseId;
         }
     }
 }

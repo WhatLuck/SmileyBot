@@ -57,7 +57,13 @@ public class MyListener extends ListenerAdapter {
                 Commands.slash("setupserver", "Not accessible to regular users"),
                 Commands.slash("resetserver", "Not accessible to regular users"),
                 Commands.slash("gradereport", "Accesses user's enrolled course and pulls grades")
-                        .addOption(OptionType.BOOLEAN, "favoritefilter", "Filters the report by only favorited courses")
+                        .addOption(OptionType.BOOLEAN, "favoritefilter", "Filters the report by only favorited courses"),
+                Commands.slash("commandhelp", "Lists all usable commands"),
+                Commands.slash("toggleCensor", "Toggles the bot's censor [ PER INDIVIDUAL CHANNEL ]"),
+                Commands.slash("createstudychannel", "Creates a temporary study channel, inviting users through an embed"),
+                Commands.slash("applycourseroles", "Parses user's currently enrolled courses and applies roles for each"),
+                Commands.slash("createcoursecategory", "Creates a category for a specific course [ REQUIRES COURSE ROLE ]")
+                // Ticket Handler?
                 ).queue();
     }
 
@@ -121,10 +127,24 @@ public class MyListener extends ListenerAdapter {
                     throw new RuntimeException(e);
                 }
             }
+            case "commandhelp" -> {
+                CommandSpace.handleCommandHelp(event);
+            }
+            case "toggleCensor" -> {
+                // currently un-Implemented!
+            }
+            case "createstudychannel" -> {
+                // currently un-Implemented!
+            }
+            case "applycourseroles" -> {
+                // currently un-Implemented!
+            }
+            case "createcoursecategory" -> {
+                // currently un-Implemented!
+            }
             default -> {
             }
         }
-
     }
 
     @Override
@@ -137,10 +157,4 @@ public class MyListener extends ListenerAdapter {
             }
         }
     }
-
-
-
-
-
-
 }
