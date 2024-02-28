@@ -59,9 +59,11 @@ public class MyListener extends ListenerAdapter {
                 Commands.slash("gradereport", "Accesses user's enrolled course and pulls grades")
                         .addOption(OptionType.BOOLEAN, "favoritefilter", "Filters the report by only favorited courses"),
                 Commands.slash("commandhelp", "Lists all usable commands"),
-                Commands.slash("toggleCensor", "Toggles the bot's censor [ PER INDIVIDUAL CHANNEL ]"),
+                //Commands.slash("togglecensor", "Toggles the bot's censor [ PER INDIVIDUAL CHANNEL ]"),
                 Commands.slash("createstudychannel", "Creates a temporary study channel, inviting users through an embed"),
-                Commands.slash("applycourseroles", "Parses user's currently enrolled courses and applies roles for each"),
+                Commands.slash("applycourseroles", "Parses user's currently enrolled courses and applies roles for each")
+                        .addOption(OptionType.BOOLEAN, "favoritefilter", "Filters the report by only favorited courses"),
+                Commands.slash("clearcourseroles", "Removes all course-based roles"),
                 Commands.slash("createcoursecategory", "Creates a category for a specific course [ REQUIRES COURSE ROLE ]")
                 // Ticket Handler?
                 ).queue();
@@ -108,10 +110,15 @@ public class MyListener extends ListenerAdapter {
         switch (event.getName()) {
             case "setapi" -> {
                 assert member != null;
-                CommandSpace.handleSetAPI(event, member);
+                CommandSpace.handleSetAPI(event, member, event.getGuild());
             }
             case "getdata" -> CommandSpace.handleGetData(event);
-            case "todo" -> CommandSpace.handleTodo(event);
+            case "todo" -> {
+                if (CommandSpace.apiFailure(event, member)) CommandSpace.handleTodo(event);
+                else {
+                    CommandSpace.sendAPIFailure(event);
+                }
+            }
             case "setuphelp" -> CommandSpace.handleSetupHelp(event);
             case "deletedata" -> CommandSpace.handleDeleteData(event, Objects.requireNonNull(event.getGuild()), member);
             case "setupserver" -> {
@@ -120,11 +127,15 @@ public class MyListener extends ListenerAdapter {
             }
             case "resetserver" -> CommandSpace.resetServerSetup(event);
             case "gradereport" -> {
-                try {
-                    assert member != null;
-                    CommandSpace.getEnrollmentInfo(event, member);
-                } catch (IOException | InterruptedException e) {
-                    throw new RuntimeException(e);
+                if (CommandSpace.apiFailure(event, member))
+                    try {
+                        assert member != null;
+                        CommandSpace.getEnrollmentInfo(event, member);
+                    } catch (IOException | InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                else {
+                    CommandSpace.sendAPIFailure(event);
                 }
             }
             case "commandhelp" -> {
@@ -137,10 +148,17 @@ public class MyListener extends ListenerAdapter {
                 // currently un-Implemented!
             }
             case "applycourseroles" -> {
-                // currently un-Implemented!
+                if (CommandSpace.apiFailure(event, member))
+                    CommandSpace.applyCourseRoles(event, member, event.getGuild());
+                else {
+                    CommandSpace.sendAPIFailure(event);
+                }
             }
             case "createcoursecategory" -> {
                 // currently un-Implemented!
+            }
+            case "clearcourseroles" -> {
+                CommandSpace.removeCourseRoles(event, member);
             }
             default -> {
             }

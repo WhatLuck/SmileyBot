@@ -102,7 +102,7 @@ public class GradeData {
         }
         return enrollments;
     }
-    static List<GradeData.CourseData> fetchCourseName(String discordId) {
+    static List<GradeData.CourseData> fetchCourseName(String discordId, Boolean favoriteFilter) {
         String studentAPI = null;
         String platformURL = null;
 
@@ -142,6 +142,13 @@ public class GradeData {
                 // Iterate over each course in the JSON response
                 for (JsonNode courseNode : rootNode) {
                     // Extract course data
+
+                    favoriteFilter = (favoriteFilter == null) ? false : favoriteFilter;
+                    // Check if the favorite filter is active and if the course is a favorite
+                    if ((favoriteFilter) && !(courseNode.has("is_favorite") && courseNode.get("is_favorite").asBoolean())) {
+                        continue; // Skip this course if the favorite filter is true (or null) and it's not a favorite
+                    }
+
                     String courseName = courseNode.path("name").asText();
                     int courseId = courseNode.path("id").asInt();
                     courses.add(new CourseData(courseName, courseId));

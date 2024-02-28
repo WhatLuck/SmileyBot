@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
+import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 
@@ -39,6 +40,8 @@ public class CommandSpace {
     private static final String JDBC_DATABASE_URL = "jdbc:sqlite:database.db";
     public static Role serverManagerRole;
     public static Role verifiedRole;
+
+    public static Role courseRole;
     public static Role unverifiedRole;
     public static TextChannel verifyHere;
     public static TextChannel botCommands;
@@ -221,7 +224,7 @@ public class CommandSpace {
             event.reply("Error occurred while fetching TODO assignments.").setEphemeral(true).queue();
         }
     }
-    static void handleSetAPI(SlashCommandInteractionEvent event, Member member){
+    static void handleSetAPI(SlashCommandInteractionEvent event, Member member, Guild guild){
         String apiKey = null;
         String platformURL = null;
 
@@ -305,6 +308,11 @@ public class CommandSpace {
                                     .setColor(0x00f549)
                                     .setFooter("User Verified")
                                     .setTimestamp(Instant.now());
+
+                            recentlyVerifiedLog = guild.getTextChannels().stream()
+                                    .filter(channel -> channel.getName().equals("recently-verified-log"))
+                                    .findFirst()
+                                    .orElse(null);
 
                             recentlyVerifiedLog.sendMessageEmbeds(embedBuilder.build()).queue();
 
@@ -496,6 +504,48 @@ public class CommandSpace {
 
      }
 
+    static void applyCourseRoles(SlashCommandInteractionEvent event, Member member, Guild guild) {
+
+        Boolean favoriteFilter = null;
+        if (event.getOption("favoritefilter") != null) {
+            favoriteFilter = event.getOption("favoritefilter").getAsBoolean();
+        }
+
+        List<GradeData.CourseData> courses = GradeData.fetchCourseName(member.getId(), favoriteFilter);
+
+        EmbedBuilder embedBuilder = new EmbedBuilder()
+                .setAuthor("Roles Applied!")
+                .setDescription("Your roles have been assigned based on your currently enrolled courses!\n\nRoles added:")
+                .setColor(0x00b0f4); // Blue color
+
+        for (GradeData.CourseData course : courses) {
+            String roleName = "" + course.getCourseId();
+
+            List<Role> existingRoles = guild.getRolesByName(roleName, true);
+            Role courseRole;
+
+            if (existingRoles.isEmpty()) {
+                courseRole = guild.createRole()
+                        .setName(roleName)
+                        .setColor(Color.decode("#b3b3b3"))
+                        .complete();
+            } else {
+                courseRole = existingRoles.get(0); // Assuming there's only one role with the same name
+            }
+
+            guild.addRoleToMember(member, courseRole).complete();
+
+            // Append the role name to the embed description
+            embedBuilder.appendDescription("`" + roleName + "` ");
+        }
+
+        // Build the message embed
+        MessageEmbed embed = embedBuilder.build();
+
+        // Reply with the embed message (ephemeral)
+        event.replyEmbeds(embed).queue();
+    }
+
     static List<PostData> getGradingReport(SlashCommandInteractionEvent event) throws IOException, InterruptedException {
         String studentId = null;
         String studentAPI = null;
@@ -553,6 +603,106 @@ public class CommandSpace {
             statement.execute(createTableSQL);
         }
     }
+
+    static boolean apiFailure(SlashCommandInteractionEvent event, Member member) {
+        String studentAPI = null;
+        String platformURL = null;
+
+        try (Connection connection = DriverManager.getConnection(JDBC_DATABASE_URL)) {
+            String sql = "SELECT apiKey, platformURL FROM userData WHERE discordId = ?";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, member.getId());
+                ResultSet resultSet = statement.executeQuery();
+                if (resultSet.next()) {
+                    studentAPI = resultSet.getString("apiKey");
+                    platformURL = resultSet.getString("platformURL");
+                    System.out.println("Api key: " + studentAPI);
+                }
+            }
+        } catch (SQLException e) {
+            // SQL Exception occurred, reply with embed and return false
+            return false;
+        }
+
+        // If platformURL is null or doesn't start with "http", return false
+        if (platformURL == null || !platformURL.startsWith("http")) {
+            System.err.println("Invalid platformURL: " + platformURL);
+            return false;
+        }
+
+        try {
+            String courseURL = platformURL + "/api/v1/users/self/courses?include[]=total_scores&include[]=term&include[]=favorites&access_token=" + studentAPI;
+            System.out.println(courseURL);
+            HttpClient httpClient = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .GET()
+                    .uri(URI.create(courseURL))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                return true;
+            } else {
+                // If HTTP request fails, reply with embed and return false
+                EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .setAuthor("API Failure!")
+                        .setDescription("Failed to retrieve course information from the platform. Check your data with /getData!")
+                        .setColor(0xd74242) // Red color
+                        .setTimestamp(Instant.now());
+                MessageEmbed embed = embedBuilder.build();
+                event.replyEmbeds(embed).setEphemeral(true).queue();
+                return false;
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    static void sendAPIFailure(SlashCommandInteractionEvent event) {
+        EmbedBuilder embedBuilder = new EmbedBuilder()
+                .setAuthor("API Failure!")
+                .setDescription("An error occurred while contacting the platform.")
+                .setColor(0xd74242) // Red color
+                .setTimestamp(Instant.now());
+        MessageEmbed embed = embedBuilder.build();
+        event.replyEmbeds(embed).setEphemeral(true).queue();
+    }
+
+    public static void removeCourseRoles(SlashCommandInteractionEvent event, Member member) {
+        List<Role> roles = member.getRoles();
+        for (Role role : roles) {
+            // Check if the role is denoted by its color and name
+            if (isCourseRole(role)) {
+                role.getGuild().removeRoleFromMember(member, role).queue();
+            }
+        }
+        sendSuccessEmbed(event);
+    }
+
+    private static void sendSuccessEmbed(SlashCommandInteractionEvent event) {
+        EmbedBuilder embedBuilder = new EmbedBuilder()
+                .setAuthor("Success!")
+                .setDescription("All your course roles have been removed!\nTo get them back run /applyCourseRoles!")
+                .setColor(new Color(0x9cb9e8))
+                .setTimestamp(Instant.now());
+
+        MessageEmbed embed = embedBuilder.build();
+        event.replyEmbeds(embed).queue();
+    }
+
+    // Method to check if a role is a course role
+    private static boolean isCourseRole(Role role) {
+        // Check if the role name consists only of digits
+        boolean isDigitsOnly = role.getName().matches("\\d+");
+        // Check if the role color is a specific color (e.g., Color.decode("#b3b3b3"))
+        boolean isCourseColor = role.getColor().equals(Color.decode("#b3b3b3"));
+
+        return isDigitsOnly && isCourseColor;
+    }
+
+
+
 
     static String sendGetRequest(String urlString) throws IOException {
         StringBuilder response = new StringBuilder();
