@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.interaction.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
@@ -38,11 +39,77 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.*;
+import java.awt.*;
 import java.util.List;
-import java.util.Objects;
+
+import static org.example.CommandSpace.*;
 
 public class MyListener extends ListenerAdapter {
+
+
+    @Override
+    public void onButtonInteraction(ButtonInteractionEvent event) {
+        String componentId = event.getComponentId();
+
+        // Extract action from the component ID and trim any leading/trailing spaces
+        String action = componentId.split(" ")[0].trim();
+
+        // Switch based on the action
+        switch (action) {
+            case "previous":
+                // Handle the previous button click
+                int prevIndex = Integer.parseInt(componentId.substring("previous".length()).replaceAll("\\s+", "")) - 1;
+                deleteAndThenUpdate(event, prevIndex);
+                break;
+            case "next":
+                // Handle the next button click
+                // Extract the numeric part of the componentId (without spaces) and parse it to an integer
+                int nextIndex = Integer.parseInt(componentId.substring("next".length()).replaceAll("\\s+", "")) + 1;
+
+                deleteAndThenUpdate(event, nextIndex);
+                break;
+            case "create":
+                // Extract the courseID and courseName from the componentId
+                String[] parts = componentId.split("\\s+", 3); // Split into three parts based on whitespace
+                if (parts.length == 3) {
+                    String courseID = parts[1]; // Extract courseID
+                    String courseName = parts[2]; // Extract courseName
+                    createCourseChannel(event, event.getGuild(), courseID, courseName);
+                } else {
+                    System.out.println("Invalid componentId format: " + componentId);
+                }
+                break;
+            case "cancelDeletion":
+                event.getMessage().delete().queue(
+                        // On success, do nothing
+                        __ -> {},
+                        // On failure, log an error
+                        error -> System.out.print("")
+                );
+                break;
+            case "confirmDeletion":
+                CommandSpace.deleteAllInCategory(event, event.getGuild(), event.getMember());
+                break;
+            default:
+                System.out.println("Unknown action: " + action);
+                break;
+        }
+    }
+
+    private void deleteAndThenUpdate(ButtonInteractionEvent event, int pageIndex) {
+        // Run updateEmbed first
+        updateEmbed(event, pageIndex);
+
+        // Delete the current embed message
+        event.getMessage().delete().queue(
+                // On success, do nothing
+                (__)->{},
+                // On failure, log an error
+                (error) -> System.out.print("")
+        );
+    }
+
 
     public static void registerCommands(Guild guild) {
         CommandListUpdateAction commands = guild.updateCommands();
@@ -64,7 +131,8 @@ public class MyListener extends ListenerAdapter {
                 Commands.slash("applycourseroles", "Parses user's currently enrolled courses and applies roles for each")
                         .addOption(OptionType.BOOLEAN, "favoritefilter", "Filters the report by only favorited courses"),
                 Commands.slash("clearcourseroles", "Removes all course-based roles"),
-                Commands.slash("createcoursecategory", "Creates a category for a specific course [ REQUIRES COURSE ROLE ]")
+                Commands.slash("createcoursecategory", "Creates a category for a specific course [ REQUIRES COURSE ROLE ]"),
+                Commands.slash("deletecoursecategory", "Deletes all channels within the course channel [ ADMIN ONLY ]")
                 // Ticket Handler?
                 ).queue();
     }
@@ -155,10 +223,13 @@ public class MyListener extends ListenerAdapter {
                 }
             }
             case "createcoursecategory" -> {
-                // currently un-Implemented!
+                sendCreationOptions(event, member, 0);
             }
             case "clearcourseroles" -> {
                 CommandSpace.removeCourseRoles(event, member);
+            }
+            case  "deletecoursecategory" -> {
+                CommandSpace.promptDeleteAll(event, event.getGuild(), event.getMember());
             }
             default -> {
             }
@@ -175,4 +246,8 @@ public class MyListener extends ListenerAdapter {
             }
         }
     }
+
+
+
+
 }

@@ -9,12 +9,18 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import org.w3c.dom.Text;
 
 import java.awt.*;
 import java.io.*;
@@ -93,6 +99,7 @@ public class CommandSpace {
         recentlyVerifiedLog = guild.getTextChannelsByName("recently-verified", true).stream().findFirst().orElse(null);
         botCommands = guild.getTextChannelsByName("bot-commands", true).stream().findFirst().orElse(null);
     }
+
     static void handleGetData(SlashCommandInteractionEvent event) {
         try (Connection connection = DriverManager.getConnection(JDBC_DATABASE_URL)) {
             String discordId = event.getUser().getId();
@@ -132,6 +139,7 @@ public class CommandSpace {
             event.reply("An error occurred while fetching your data.").setEphemeral(true).queue();
         }
     }
+
     static void handleSetupHelp(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder()
                 .setAuthor("User profile setup", null, null)
@@ -141,7 +149,8 @@ public class CommandSpace {
 
         event.replyEmbeds(embedBuilder.build()).queue();
     }
-    static void handleCommandHelp(SlashCommandInteractionEvent event){
+
+    static void handleCommandHelp(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder()
                 .setAuthor("Command Index", null, null)
                 .setDescription("Below are the list of usable commands, \nthose listed in the field [ ADMIN ] are\nonly usable by server operators, those with \nadministrator, and the \"Server Manager\" role.")
@@ -154,7 +163,8 @@ public class CommandSpace {
 
         event.replyEmbeds(embedBuilder.build()).queue();
     }
-    static void handleDeleteData(SlashCommandInteractionEvent event, Guild guild, Member member){
+
+    static void handleDeleteData(SlashCommandInteractionEvent event, Guild guild, Member member) {
         updateRoles(event);
         String discordId = event.getUser().getId();
         guild.removeRoleFromMember(member, verifiedRole).queue();
@@ -185,7 +195,8 @@ public class CommandSpace {
                     .queue();
         }
     }
-    static void handleTodo(SlashCommandInteractionEvent event){
+
+    static void handleTodo(SlashCommandInteractionEvent event) {
         try {
             List<PostData> todoAssignments = getTodoAssignmentsFromCanvas(event);
 
@@ -224,7 +235,8 @@ public class CommandSpace {
             event.reply("Error occurred while fetching TODO assignments.").setEphemeral(true).queue();
         }
     }
-    static void handleSetAPI(SlashCommandInteractionEvent event, Member member, Guild guild){
+
+    static void handleSetAPI(SlashCommandInteractionEvent event, Member member, Guild guild) {
         String apiKey = null;
         String platformURL = null;
 
@@ -365,9 +377,19 @@ public class CommandSpace {
                     .addPermissionOverride(unverifiedRole, EnumSet.of(Permission.VIEW_CHANNEL), null)
                     .complete();
 
-            recentlyVerifiedLog = serverManagerCategory.createTextChannel("Recently Verified Log").complete();
-            botCommands = verifiedCategory.createTextChannel("Bot commands").complete();
-            verifyHere = unverifiedCategory.createTextChannel("Verify Here").complete();
+            serverManagerCategory.createTextChannel("Recently Verified Log").complete();
+            serverManagerCategory.createTextChannel("Admin Log").complete();
+            serverManagerCategory.createTextChannel("Admin chat & commands").complete();
+
+            verifiedCategory.createTextChannel("Bot commands").complete();
+            verifiedCategory.createTextChannel("verified general").complete();
+            verifiedCategory.createVoiceChannel("General").complete();
+            verifiedCategory.createVoiceChannel("Study 1").complete();
+            verifiedCategory.createVoiceChannel("Study 2").complete();
+            verifiedCategory.createVoiceChannel("Music").complete();
+
+            unverifiedCategory.createTextChannel("Verify Here").complete();
+            unverifiedCategory.createTextChannel("Unverified general").complete();
 
             EmbedBuilder embedBuilder = new EmbedBuilder()
                     .setAuthor("User profile setup", null, null)
@@ -375,7 +397,14 @@ public class CommandSpace {
                     .setColor(0x00b0f4)
                     .setTimestamp(Instant.now());
 
-            verifyHere.sendMessageEmbeds(embedBuilder.build()).queue();
+            TextChannel verifyHere = event.getGuild().getTextChannelsByName("verify-here", true).stream().findFirst().orElse(null);
+            if (verifyHere != null) {
+                // Send the embed to the channel
+                verifyHere.sendMessageEmbeds(embedBuilder.build()).queue();
+            } else {
+                System.out.println("Channel named 'verify-here' not found.");
+            }
+
 
             // Add Unverified role to all members except the command executor
             guild.loadMembers().onSuccess(members -> {
@@ -448,7 +477,7 @@ public class CommandSpace {
                 studentAPI = resultSet.getString("apiKey");
                 studentId = resultSet.getString("studentId");
                 platformURL = resultSet.getString("platformURL");
-                System.out.println("Api key: " + studentAPI + "  studentID: " + studentId);
+                //System.out.println("Api key: " + studentAPI + "  studentID: " + studentId);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -462,7 +491,7 @@ public class CommandSpace {
                     .GET()
                     .uri(URI.create(todoUrl + "?access_token=" + studentAPI))
                     .build();
-            System.out.println(todoUrl + "?access_token=" + studentAPI);
+            //System.out.println(todoUrl + "?access_token=" + studentAPI);
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200) {
@@ -484,25 +513,25 @@ public class CommandSpace {
             favoriteFilter = event.getOption("favoritefilter").getAsBoolean();
         }
 
-                List<GradeData.EnrollmentData> enrollments = GradeData.fetchCourseData(member.getId(), favoriteFilter);
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setAuthor("User Grade Report")
-                        .setColor(Color.decode("#7d47b3"))
-                        .setTimestamp(Instant.now());
+        List<GradeData.EnrollmentData> enrollments = GradeData.fetchCourseData(member.getId(), favoriteFilter);
+        EmbedBuilder embedBuilder = new EmbedBuilder()
+                .setAuthor("User Grade Report")
+                .setColor(Color.decode("#7d47b3"))
+                .setTimestamp(Instant.now());
 
-                StringBuilder descriptionBuilder = new StringBuilder();
-                descriptionBuilder.append("Below are your current grades in your enrollments:\n\n");
+        StringBuilder descriptionBuilder = new StringBuilder();
+        descriptionBuilder.append("Below are your current grades in your enrollments:\n\n");
 
-                for (GradeData.EnrollmentData enrollment : enrollments) {
-                    descriptionBuilder.append("**Course Name:** ").append(enrollment.getCourseName()).append("\n");
-                    descriptionBuilder.append("> Current Grade: **").append(enrollment.getCourseGrade()).append("**\n\n");
-                }
+        for (GradeData.EnrollmentData enrollment : enrollments) {
+            descriptionBuilder.append("**Course Name:** ").append(enrollment.getCourseName()).append("\n");
+            descriptionBuilder.append("> Current Grade: **").append(enrollment.getCourseGrade()).append("**\n\n");
+        }
 
-                embedBuilder.setDescription(descriptionBuilder.toString());
+        embedBuilder.setDescription(descriptionBuilder.toString());
 
-                event.replyEmbeds(embedBuilder.build()).queue();
+        event.replyEmbeds(embedBuilder.build()).queue();
 
-     }
+    }
 
     static void applyCourseRoles(SlashCommandInteractionEvent event, Member member, Guild guild) {
 
@@ -561,7 +590,7 @@ public class CommandSpace {
                 studentAPI = resultSet.getString("apiKey");
                 studentId = resultSet.getString("studentId");
                 platformURL = resultSet.getString("platformURL");
-                System.out.println("Api key: " + studentAPI + "  studentID: " + studentId);
+                //System.out.println("Api key: " + studentAPI + "  studentID: " + studentId);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -575,7 +604,7 @@ public class CommandSpace {
                     .GET()
                     .uri(URI.create(todoUrl + "?access_token=" + studentAPI))
                     .build();
-            System.out.println(todoUrl + "?access_token=" + studentAPI);
+            //System.out.println(todoUrl + "?access_token=" + studentAPI);
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200) {
@@ -616,7 +645,7 @@ public class CommandSpace {
                 if (resultSet.next()) {
                     studentAPI = resultSet.getString("apiKey");
                     platformURL = resultSet.getString("platformURL");
-                    System.out.println("Api key: " + studentAPI);
+                    //System.out.println("Api key: " + studentAPI);
                 }
             }
         } catch (SQLException e) {
@@ -632,7 +661,7 @@ public class CommandSpace {
 
         try {
             String courseURL = platformURL + "/api/v1/users/self/courses?include[]=total_scores&include[]=term&include[]=favorites&access_token=" + studentAPI;
-            System.out.println(courseURL);
+            //System.out.println(courseURL);
             HttpClient httpClient = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
                     .GET()
@@ -659,6 +688,7 @@ public class CommandSpace {
             return false;
         }
     }
+
     static void sendAPIFailure(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder()
                 .setAuthor("API Failure!")
@@ -691,7 +721,6 @@ public class CommandSpace {
         event.replyEmbeds(embed).queue();
     }
 
-    // Method to check if a role is a course role
     private static boolean isCourseRole(Role role) {
         // Check if the role name consists only of digits
         boolean isDigitsOnly = role.getName().matches("\\d+");
@@ -700,9 +729,6 @@ public class CommandSpace {
 
         return isDigitsOnly && isCourseColor;
     }
-
-
-
 
     static String sendGetRequest(String urlString) throws IOException {
         StringBuilder response = new StringBuilder();
@@ -721,5 +747,204 @@ public class CommandSpace {
         return response.toString();
     }
 
+
+    // Map to store the current embed and page index for each guild
+    static Map<Long, Map.Entry<MessageEmbed, Integer>> embedMap = new HashMap<>();
+
+    public static void sendCreationOptions(SlashCommandInteractionEvent event, Member member, int pageIndex) {
+        List<GradeData.CourseData> courses = GradeData.fetchCourseName(member.getId(), false);
+        int coursesPerPage = 1; // Display only one course per page
+        int pageCount = (int) Math.ceil((double) courses.size() / coursesPerPage);
+
+        // Calculate the start and end indices based on the pageIndex
+        int startIndex = pageIndex * coursesPerPage;
+        int endIndex = Math.min(startIndex + coursesPerPage, courses.size());
+
+        // Initialize the embed builder
+        EmbedBuilder embedBuilder = new EmbedBuilder()
+                .setAuthor("Creation Option(s)")
+                .setDescription("Below are the courses that you are enrolled in, please choose one to create a channel for!\n\n")
+                .setColor(new Color(0x00b0f4))
+                .setTimestamp(Instant.now());
+
+        // Loop through the courses and add buttons
+        for (int j = startIndex; j < endIndex; j++) {
+            GradeData.CourseData course = courses.get(j);
+            String description = "> " + course.getCourseName() + "\n" + "```Course Code: " + course.getCourseId() + "```\n\n";
+            embedBuilder.appendDescription(description);
+
+            // Add courseId to the button ID
+            String createButtonId = "create " + course.getCourseId() + " " + course.getCourseName();
+
+            // Check if there are more pages to add navigation buttons
+            boolean hasPrevious = pageIndex > 0;
+            boolean hasNext = (pageIndex + 1) < pageCount;
+
+            // Store the embed and page index in the embedMap
+            embedMap.put(event.getGuild().getIdLong(), new AbstractMap.SimpleEntry<>(embedBuilder.build(), pageIndex));
+
+            // Reply with the embed and all action rows
+            event.replyEmbeds(embedBuilder.build())
+                    .addActionRow(
+                            Button.secondary("previous " + (pageIndex - 1), "◀️ Previous").withDisabled(!hasPrevious),
+                            Button.success(createButtonId, "Create!"),
+                            Button.secondary("next " + (pageIndex + 1), "Next ▶️").withDisabled(!hasNext)
+                    )
+                    .queue();
+        }
+    }
+
+
+    public static void updateEmbed(ButtonInteractionEvent event, int pageIndex) {
+        long guildId = event.getGuild().getIdLong();
+
+        // Retrieve the embed and page index from the embedMap
+        Map.Entry<MessageEmbed, Integer> embedData = embedMap.get(guildId);
+        MessageEmbed previousEmbed = embedData.getKey();
+        int previousPageIndex = embedData.getValue();
+
+        // Delete the previous message
+        event.getChannel().deleteMessageById(event.getMessageId()).queue(
+                // On success, send the updated embed
+                (__) -> {
+                    // Retrieve the courses
+                    List<GradeData.CourseData> courses = GradeData.fetchCourseName(event.getMember().getId(), false);
+                    int coursesPerPage = 1; // Display only one course per page
+                    int pageCount = (int) Math.ceil((double) courses.size() / coursesPerPage);
+
+                    // Calculate the new page index
+                    int newIndex = (pageIndex + 1) % pageCount;
+
+                    // Calculate the start and end indices based on the new page index
+                    int startIndex = newIndex * coursesPerPage;
+                    int endIndex = Math.min(startIndex + coursesPerPage, courses.size());
+
+                    // Rebuild the embed with the updated page index
+                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                            .setAuthor("Creation Option(s)")
+                            .setDescription("Below are the courses that you are enrolled in, please choose one to create a channel for!\n\n")
+                            .setColor(new Color(0x00b0f4))
+                            .setTimestamp(Instant.now());
+
+                    // Loop through the courses and add buttons
+                    for (int j = startIndex; j < endIndex; j++) {
+                        GradeData.CourseData course = courses.get(j);
+                        String description = "> " + course.getCourseName() + "\n" + "```Course Code: " + course.getCourseId() + "```\n\n";
+                        embedBuilder.appendDescription(description);
+
+                        // Add courseId to the button ID
+                        String createButtonId = "create " + course.getCourseId() + " " + course.getCourseName();
+
+
+                        // Check if there are more pages to add navigation buttons
+                        boolean hasPrevious = newIndex > 0;
+                        boolean hasNext = (newIndex + 1) < pageCount;
+
+                        // Update the embedMap with the new embed and page index
+                        embedMap.put(guildId, new AbstractMap.SimpleEntry<>(embedBuilder.build(), newIndex));
+
+                        // Send the updated embed with navigation buttons
+                        event.getChannel().sendMessageEmbeds(embedBuilder.build())
+                                .addActionRow(
+                                        Button.secondary("previous " + (newIndex - 1), "◀️ Previous").withDisabled(!hasPrevious),
+                                        Button.success(createButtonId, "Create!"),
+                                        Button.secondary("next " + (newIndex + 1), "Next ▶️").withDisabled(!hasNext)
+                                )
+                                .queue();
+                    }
+                },
+                // On failure, log an error
+                (error) -> System.out.println("Embed modification failure!")
+        );
+    }
+
+
+    // Helper method to format course list
+    private static String getCourseList(List<GradeData.CourseData> courses, Member member) {
+
+        StringBuilder sb = new StringBuilder();
+
+        for (GradeData.CourseData course : courses) {
+            sb.append("> ").append(course.getCourseName()).append("\n")
+                    .append("```Course Code: ").append(course.getCourseId()).append("```").append("\n\n");
+        }
+        return sb.toString();
+    }
+
+    public static void createCourseChannel(ButtonInteractionEvent event, Guild guild, String courseID, String courseName) {
+        // Check if the role for the courseID exists
+        Role courseRole = guild.getRolesByName(courseID, true).stream().findFirst().orElse(null);
+        if (courseRole == null) {
+            event.reply("The role for course ID " + courseID + " does not exist.").queue();
+            return;
+        }
+
+        // Check if the user running the command has the course role, is a server admin, or has the serverManagerRole
+        Member member = event.getMember();
+        if (!member.getRoles().contains(courseRole) && !member.isOwner() && !member.hasPermission(Permission.ADMINISTRATOR) && !member.getRoles().contains(serverManagerRole)) {
+            event.reply("You do not have permission to create a channel for this course. Check your roles!").queue();
+            return;
+        }
+
+        // Check if the channel has already been created
+        Category existingChannel = guild.getCategoriesByName(courseName, true).stream().findFirst().orElse(null);
+        if (existingChannel != null) {
+            event.reply("The channel for course " + courseName + " has already been created.").queue();
+            return;
+        }
+
+        // Proceed with creating the course channel
+        Category courseChannel = guild.createCategory(courseName)
+                .addPermissionOverride(guild.getPublicRole(), EnumSet.noneOf(Permission.class), EnumSet.of(Permission.VIEW_CHANNEL))
+                .addPermissionOverride(courseRole, EnumSet.of(Permission.VIEW_CHANNEL), null)
+                .addPermissionOverride(event.getGuild().getRolesByName("ServerManager", true).stream().findFirst().orElse(null), EnumSet.of(Permission.VIEW_CHANNEL), null)
+                .complete();
+
+        TextChannel courseChannelGeneral = (TextChannel) courseChannel.createTextChannel("General").complete();
+        courseChannel.createTextChannel("Homework Discussion").complete();
+        courseChannel.createTextChannel("Important info").complete();
+        courseChannel.createVoiceChannel("Voice Channel").complete();
+
+        EmbedBuilder embedBuilder = new EmbedBuilder()
+                .setAuthor("Course Channel Created!")
+                .setDescription("The channel for\n`" + courseName + "`\nCan be found here;  <#" + courseChannelGeneral.getId() + ">")
+                .setColor(Color.decode("#00f510"))
+                .setTimestamp(Instant.now());
+
+        event.replyEmbeds(embedBuilder.build()).queue();
+    }
+
+
+    public static void promptDeleteAll(SlashCommandInteractionEvent event, Guild guild, Member member){
+        EmbedBuilder embed = new EmbedBuilder()
+                .setAuthor("Are you sure?")
+                .setDescription("This will **permanently** delete all messages, \nembeds, and channels within this category!\n\nPlease confirm the deletion of this category below.")
+                .setColor(Color.decode("#940000"))
+                .setTimestamp(Instant.now());
+
+        event.replyEmbeds(embed.build()).addActionRow(
+                Button.success("confirmDeletion", "Confirm"),
+                Button.danger("cancelDeletion", "Cancel")
+        ).queue();
+    }
+
+    public static void deleteAllInCategory(ButtonInteractionEvent event, Guild guild, Member member) {
+        // Check if the member is a server manager or administrator
+        if (!member.hasPermission(Permission.ADMINISTRATOR) && !member.getRoles().contains(serverManagerRole)) {
+            event.reply("You do not have permission to perform this action.").queue();
+            return;
+        }
+
+        // Get the category of the channels you want to delete (replace "Category Name" with the actual category name)
+        Category category = event.getChannel().asTextChannel().getParentCategory();
+
+        if (category != null) {
+            category.getChannels().forEach(channel -> channel.delete().queue());
+            category.delete().queue();
+            event.reply("All channels in the category have been deleted.").queue();
+        } else {
+            event.reply("Failed to delete channels: Category not found.").queue();
+        }
+    }
 
 }

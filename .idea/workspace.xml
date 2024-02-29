@@ -7,9 +7,7 @@
     <list default="true" id="749483cc-a864-4888-9221-4843d53563c7" name="Changes" comment="balls">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/database.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/CommandSpace.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/CommandSpace.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/GradeData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/GradeData.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/MyListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/MyListener.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
